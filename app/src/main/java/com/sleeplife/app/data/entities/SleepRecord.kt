@@ -2,21 +2,20 @@ package com.sleeplife.app.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Entity(tableName = "sleep_records")
 data class SleepRecord(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val startTime: LocalDateTime,
-    val endTime: LocalDateTime,
+    val endTime: LocalDateTime? = null,
     val quality: SleepQuality,
     val notes: String = "",
-    val createdAt: LocalDateTime = LocalDateTime.parse(
-        LocalDateTime.Clock.System.now().toString(),
-        DateTimeFormat.ISO_LOCAL_DATE_TIME
-    )
+    val createdAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 )
 
 enum class SleepQuality {

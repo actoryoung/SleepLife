@@ -10,6 +10,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,11 +46,7 @@ class PomodoroViewModel @Inject constructor(
 
     fun startSession(taskName: String, duration: Int) {
         viewModelScope.launch {
-            val now = Clock.System.now()
-            val startTime = kotlinx.datetime.LocalDateTime.parse(
-                now.toString(),
-                kotlinx.datetime.format.DateTimeFormat.ISO_LOCAL_DATE_TIME
-            )
+            val startTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
             val session = PomodoroSession(
                 taskName = taskName,
@@ -59,7 +57,12 @@ class PomodoroViewModel @Inject constructor(
                 startTime = startTime
             )
 
-            val sessionId = pomodoroRepository.insertSession(session)
+            val result = pomodoroRepository.insertSessionWithValidation(session)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+                return@launch
+            }
+            val sessionId = (result as com.sleeplife.app.core.Result.Success).data
 
             _uiState.update { it.copy(
                 isRunning = true,
@@ -111,7 +114,10 @@ class PomodoroViewModel @Inject constructor(
                         actualDuration = elapsedSeconds / 60,
                         interrupted = true
                     )
-                    pomodoroRepository.updateSession(updatedSession)
+                    val result = pomodoroRepository.updateSessionWithValidation(updatedSession)
+                    if (result is com.sleeplife.app.core.Result.Error) {
+                        _uiState.update { it.copy(errorMessage = result.exception.message) }
+                    }
                 }
             }
         }
@@ -128,10 +134,7 @@ class PomodoroViewModel @Inject constructor(
     private fun completeSession() {
         timerJob?.cancel()
         viewModelScope.launch {
-            val endTime = kotlinx.datetime.LocalDateTime.parse(
-                Clock.System.now().toString(),
-                kotlinx.datetime.format.DateTimeFormat.ISO_LOCAL_DATE_TIME
-            )
+            val endTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
             _uiState.value.currentSessionId?.let { id ->
                 val session = pomodoroRepository.getSessionById(id)
@@ -142,7 +145,11 @@ class PomodoroViewModel @Inject constructor(
                         completed = true,
                         endTime = endTime
                     )
-                    pomodoroRepository.updateSession(updatedSession)
+                    val result = pomodoroRepository.updateSessionWithValidation(updatedSession)
+                    if (result is com.sleeplife.app.core.Result.Error) {
+                        _uiState.update { it.copy(errorMessage = result.exception.message) }
+                        return@launch
+                    }
                 }
             }
 
@@ -152,7 +159,8 @@ class PomodoroViewModel @Inject constructor(
                 currentTaskName = "",
                 remainingSeconds = 0,
                 totalSeconds = 0,
-                sessionCompleted = true
+                sessionCompleted = true,
+                errorMessage = null
             ) }
 
             loadTodayStats()
@@ -184,5 +192,6 @@ data class PomodoroUiState(
     val totalSeconds: Int = 0,
     val showStartDialog: Boolean = false,
     val sessionCompleted: Boolean = false,
-    val todayFocusMinutes: Int = 0
+    val todayFocusMinutes: Int = 0,
+    val errorMessage: String? = null
 )

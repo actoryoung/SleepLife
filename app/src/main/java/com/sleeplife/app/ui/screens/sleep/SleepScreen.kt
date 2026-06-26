@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Moon
+import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,9 +24,9 @@ import com.sleeplife.app.data.entities.SleepQuality
 import com.sleeplife.app.data.entities.getDisplayString
 import com.sleeplife.app.ui.viewmodels.SleepViewModel
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlin.math.abs
-import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +111,7 @@ fun SleepHeader(
         ) {
             if (isTracking) {
                 Icon(
-                    imageVector = Icons.Default.Moon,
+                    imageVector = Icons.Default.Brightness2,
                     contentDescription = "Sleeping",
                     modifier = Modifier.size(64.dp),
                     tint = Color(0xFFE94560)
@@ -142,7 +142,7 @@ fun SleepHeader(
                 }
             } else {
                 Icon(
-                    imageVector = Icons.Default.Moon,
+                    imageVector = Icons.Default.Brightness2,
                     contentDescription = "Start Sleep",
                     modifier = Modifier.size(48.dp),
                     tint = Color(0xFF5C6BC0)
@@ -198,13 +198,13 @@ fun SleepRecordCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${formatTime(record.startTime)} - ${formatTime(record.endTime)}",
+                        text = "${formatTime(record.startTime)} - ${record.endTime?.let { formatTime(it) } ?: "进行中"}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
                 }
                 Text(
-                    text = calculateDuration(record.startTime, record.endTime),
+                    text = record.endTime?.let { calculateDuration(record.startTime, it) } ?: "进行中",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFFE94560),
                     fontWeight = FontWeight.Bold
@@ -251,6 +251,7 @@ fun SleepRecordCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SleepQualityDialog(
     onDismiss: () -> Unit,
@@ -318,13 +319,7 @@ fun getQualityColor(quality: SleepQuality): Color {
 }
 
 fun formatDate(dateTime: LocalDateTime): String {
-    val formatter = DateTimeFormat {
-        monthNames(listOf("1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"))
-        char('月')
-        dayOfMonth()
-        char('日')
-    }
-    return dateTime.format(formatter)
+    return "${dateTime.monthNumber}月${dateTime.dayOfMonth}日"
 }
 
 fun formatTime(dateTime: LocalDateTime): String {
@@ -332,11 +327,12 @@ fun formatTime(dateTime: LocalDateTime): String {
 }
 
 fun calculateDuration(start: LocalDateTime, end: LocalDateTime): String {
-    val duration = kotlin.time.Duration.between(
-        java.time.LocalDateTime.of(start.year, start.monthNumber, start.dayOfMonth, start.hour, start.minute, start.second),
-        java.time.LocalDateTime.of(end.year, end.monthNumber, end.dayOfMonth, end.hour, end.minute, end.second)
-    )
-    val hours = duration.toHours().toInt()
-    val minutes = (duration.toMinutes() % 60).toInt()
+    val timeZone = TimeZone.currentSystemDefault()
+    val startInstant = start.toInstant(timeZone)
+    val endInstant = end.toInstant(timeZone)
+    val diffMillis = endInstant.toEpochMilliseconds() - startInstant.toEpochMilliseconds()
+    val totalMinutes = diffMillis / (1000 * 60)
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
     return "${hours}小时${minutes}分钟"
 }

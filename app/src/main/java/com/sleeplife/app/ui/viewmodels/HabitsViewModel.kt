@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -84,25 +86,29 @@ class HabitsViewModel @Inject constructor(
                 targetDays = targetDays,
                 color = color
             )
-            habitRepository.insertHabit(habit)
-            hideAddHabitDialog()
-            loadHabitsWithCheckIns()
+            val result = habitRepository.insertHabitWithValidation(habit)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            } else {
+                hideAddHabitDialog()
+                loadHabitsWithCheckIns()
+            }
         }
     }
 
     fun checkInHabit(habitId: Long, note: String = "") {
         viewModelScope.launch {
-            val now = Clock.System.now()
             val checkIn = HabitCheckIn(
                 habitId = habitId,
-                checkInDate = LocalDateTime.parse(
-                    now.toString(),
-                    kotlinx.datetime.format.DateTimeFormat.ISO_LOCAL_DATE_TIME
-                ),
+                checkInDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
                 note = note
             )
-            habitRepository.insertCheckIn(checkIn)
-            loadHabitsWithCheckIns()
+            val result = habitRepository.insertCheckInWithValidation(checkIn)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            } else {
+                loadHabitsWithCheckIns()
+            }
         }
     }
 
@@ -110,23 +116,32 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch {
             val todayCheckIn = habitRepository.getTodayCheckIn(habitId)
             todayCheckIn?.let {
-                habitRepository.deleteCheckInById(it.id)
-                loadHabitsWithCheckIns()
+                val result = habitRepository.deleteCheckInWithValidation(it.id)
+                if (result is com.sleeplife.app.core.Result.Error) {
+                    _uiState.update { it.copy(errorMessage = result.exception.message) }
+                } else {
+                    loadHabitsWithCheckIns()
+                }
             }
         }
     }
 
     fun deleteHabit(habit: Habit) {
         viewModelScope.launch {
-            habitRepository.deleteHabit(habit)
-            loadHabitsWithCheckIns()
+            val result = habitRepository.deleteHabitWithValidation(habit)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            } else {
+                loadHabitsWithCheckIns()
+            }
         }
     }
 }
 
 data class HabitsUiState(
     val habitsWithProgress: List<HabitWithProgress> = emptyList(),
-    val showAddDialog: Boolean = false
+    val showAddDialog: Boolean = false,
+    val errorMessage: String? = null
 )
 
 data class HabitWithProgress(

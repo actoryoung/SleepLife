@@ -3,10 +3,8 @@ package com.sleeplife.app.data
 import androidx.room.TypeConverter
 import com.sleeplife.app.data.entities.*
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.format.DateTimeFormat
 
 class Converters {
-    private val formatter = DateTimeFormat.ISO_LOCAL_DATE_TIME
 
     @TypeConverter
     fun fromLocalDateTime(dateTime: LocalDateTime?): String? {
@@ -17,7 +15,7 @@ class Converters {
     fun toLocalDateTime(value: String?): LocalDateTime? {
         return value?.let {
             try {
-                LocalDateTime.parse(it, formatter)
+                LocalDateTime.parse(it)
             } catch (e: Exception) {
                 null
             }

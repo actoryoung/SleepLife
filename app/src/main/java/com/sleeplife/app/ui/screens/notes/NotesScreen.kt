@@ -27,6 +27,8 @@ import com.sleeplife.app.data.entities.Note
 import com.sleeplife.app.data.entities.NoteMood
 import com.sleeplife.app.data.entities.getDisplayEmoji
 import com.sleeplife.app.ui.viewmodels.NotesViewModel
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -282,6 +284,7 @@ fun NoteCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditDialog(
     note: Note? = null,
@@ -373,25 +376,20 @@ fun NoteEditDialog(
 }
 
 fun formatNoteDate(dateTime: kotlinx.datetime.LocalDateTime): String {
+    val timeZone = kotlinx.datetime.TimeZone.currentSystemDefault()
     val now = kotlinx.datetime.Clock.System.now()
-    val noteDateTime = kotlinx.datetime.LocalDateTime(
-        dateTime.year,
-        dateTime.monthNumber,
-        dateTime.dayOfMonth,
-        dateTime.hour,
-        dateTime.minute,
-        dateTime.second,
-        dateTime.nanosecond
-    )
-
-    val diff = kotlin.time.Duration(
-        now.toEpochMilliseconds() - noteDateTime.toEpochMilliseconds()
-    )
+    val nowInstant = now.toEpochMilliseconds()
+    val noteInstant = dateTime.toInstant(timeZone).toEpochMilliseconds()
+    val diffMillis = nowInstant - noteInstant
+    val diffSeconds = diffMillis / 1000
+    val diffMinutes = diffSeconds / 60
+    val diffHours = diffMinutes / 60
+    val diffDays = diffHours / 24
 
     return when {
-        diff.inWholeDays > 0 -> "${diff.inWholeDays}天前"
-        diff.inWholeHours > 0 -> "${diff.inWholeHours}小时前"
-        diff.inWholeMinutes > 0 -> "${diff.inWholeMinutes}分钟前"
+        diffDays > 0 -> "${diffDays}天前"
+        diffHours > 0 -> "${diffHours}小时前"
+        diffMinutes > 0 -> "${diffMinutes}分钟前"
         else -> "刚刚"
     }
 }

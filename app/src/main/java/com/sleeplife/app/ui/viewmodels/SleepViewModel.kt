@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,15 +44,10 @@ class SleepViewModel @Inject constructor(
 
     fun startSleepTracking() {
         viewModelScope.launch {
-            val now = Clock.System.now()
-            val localDateTime = LocalDateTime.parse(
-                now.toString(),
-                kotlinx.datetime.format.DateTimeFormat.ISO_LOCAL_DATE_TIME
-            )
+            val localDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
             val sleepRecord = com.sleeplife.app.data.entities.SleepRecord(
                 startTime = localDateTime,
-                endTime = localDateTime, // Will be updated when sleep ends
                 quality = SleepQuality.AVERAGE
             )
 
@@ -65,10 +62,7 @@ class SleepViewModel @Inject constructor(
 
     fun stopSleepTracking(quality: SleepQuality, notes: String = "") {
         viewModelScope.launch {
-            val endTime = LocalDateTime.parse(
-                Clock.System.now().toString(),
-                kotlinx.datetime.format.DateTimeFormat.ISO_LOCAL_DATE_TIME
-            )
+            val endTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
             _uiState.value.currentSleepId?.let { id ->
                 val record = sleepRepository.getSleepRecordById(id)
@@ -78,21 +72,29 @@ class SleepViewModel @Inject constructor(
                         quality = quality,
                         notes = notes
                     )
-                    sleepRepository.updateSleepRecord(updatedRecord)
+                    val result = sleepRepository.updateSleepRecordWithValidation(updatedRecord)
+                    if (result is com.sleeplife.app.core.Result.Error) {
+                        _uiState.update { it.copy(errorMessage = result.exception.message) }
+                        return@launch
+                    }
                 }
             }
 
             _uiState.update { it.copy(
                 isTracking = false,
                 currentSleepId = null,
-                sleepStartTime = null
+                sleepStartTime = null,
+                errorMessage = null
             ) }
         }
     }
 
     fun deleteSleepRecord(id: Long) {
         viewModelScope.launch {
-            sleepRepository.deleteSleepRecordById(id)
+            val result = sleepRepository.deleteSleepRecordsWithValidation(id)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            }
         }
     }
 
@@ -117,8 +119,12 @@ class SleepViewModel @Inject constructor(
                 quality = quality,
                 notes = notes
             )
-            sleepRepository.insertSleepRecord(sleepRecord)
-            hideAddSleepDialog()
+            val result = sleepRepository.insertSleepRecordWithValidation(sleepRecord)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            } else {
+                hideAddSleepDialog()
+            }
         }
     }
 }
@@ -128,5 +134,6 @@ data class SleepUiState(
     val currentSleepId: Long? = null,
     val sleepStartTime: LocalDateTime? = null,
     val todaySleep: com.sleeplife.app.data.entities.SleepRecord? = null,
-    val showAddDialog: Boolean = false
+    val showAddDialog: Boolean = false,
+    val errorMessage: String? = null
 )

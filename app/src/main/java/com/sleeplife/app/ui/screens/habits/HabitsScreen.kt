@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -216,7 +217,7 @@ fun HabitCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             LinearProgressIndicator(
-                progress = { habitWithProgress.progress },
+                progress = habitWithProgress.progress,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -264,7 +265,7 @@ fun HabitDetailScreen(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.White
                     )
@@ -306,7 +307,7 @@ fun HabitDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
-                            progress = { habit.progress },
+                            progress = habit.progress,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(12.dp)
@@ -423,6 +424,7 @@ fun CheckInItem(checkIn: com.sleeplife.app.data.entities.HabitCheckIn) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitDialog(
     onDismiss: () -> Unit,

@@ -367,6 +367,7 @@ fun SessionCard(session: com.sleeplife.app.data.entities.PomodoroSession) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartSessionDialog(
     onDismiss: () -> Unit,
@@ -410,11 +411,11 @@ fun StartSessionDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            row.forEach { duration ->
+                            row.forEach { dur ->
                                 FilterChip(
-                                    selected = selectedDuration == duration,
-                                    onClick = { selectedDuration = duration },
-                                    label = { Text("$duration分钟") },
+                                    selected = selectedDuration == dur,
+                                    onClick = { selectedDuration = dur },
+                                    label = { Text("${dur}分钟") },
                                     modifier = Modifier.weight(1f)
                                 )
                             }

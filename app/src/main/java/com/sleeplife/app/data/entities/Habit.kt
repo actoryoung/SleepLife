@@ -2,7 +2,10 @@ package com.sleeplife.app.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Entity(tableName = "habits")
 data class Habit(
@@ -14,7 +17,7 @@ data class Habit(
     val targetDays: Int = 30,
     val color: Long = 0xFF6750A4,
     val isActive: Boolean = true,
-    val createdAt: LocalDateTime = LocalDateTime.Clock.System.now()
+    val createdAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 )
 
 @Entity(tableName = "habit_checkins")
@@ -24,5 +27,5 @@ data class HabitCheckIn(
     val habitId: Long,
     val checkInDate: LocalDateTime,
     val note: String = "",
-    val completedAt: LocalDateTime = LocalDateTime.Clock.System.now()
+    val completedAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 )

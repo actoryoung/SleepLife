@@ -2,7 +2,10 @@ package com.sleeplife.app.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Entity(tableName = "notes")
 data class Note(
@@ -13,8 +16,8 @@ data class Note(
     val mood: NoteMood,
     val tags: String = "",
     val isFavorite: Boolean = false,
-    val createdAt: LocalDateTime = LocalDateTime.Clock.System.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.Clock.System.now()
+    val createdAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+    val updatedAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 )
 
 enum class NoteMood {

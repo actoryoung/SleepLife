@@ -12,13 +12,13 @@ interface PomodoroSessionDao {
     @Query("SELECT * FROM pomodoro_sessions WHERE completed = 1 ORDER BY startTime DESC")
     fun getCompletedSessions(): Flow<List<PomodoroSession>>
 
-    @Query("SELECT * FROM pomodoro_sessions WHERE date(startTime/1000, 'unixepoch') = date('now') ORDER BY startTime DESC")
+    @Query("SELECT * FROM pomodoro_sessions WHERE startTime LIKE date('now') || '%' ORDER BY startTime DESC")
     fun getTodaySessions(): Flow<List<PomodoroSession>>
 
     @Query("SELECT * FROM pomodoro_sessions WHERE id = :id")
     suspend fun getSessionById(id: Long): PomodoroSession?
 
-    @Query("SELECT SUM(actualDuration) FROM pomodoro_sessions WHERE completed = 1 AND date(startTime/1000, 'unixepoch') = date('now')")
+    @Query("SELECT SUM(actualDuration) FROM pomodoro_sessions WHERE completed = 1 AND startTime LIKE date('now') || '%'")
     suspend fun getTodayFocusTime(): Int?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -9,6 +9,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -74,33 +76,44 @@ class NotesViewModel @Inject constructor(
                 mood = mood,
                 tags = tags
             )
-            noteRepository.insertNote(note)
-            hideAddNoteDialog()
+            val result = noteRepository.insertNoteWithValidation(note)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            } else {
+                hideAddNoteDialog()
+            }
         }
     }
 
     fun updateNote(note: Note) {
         viewModelScope.launch {
             val updatedNote = note.copy(
-                updatedAt = kotlinx.datetime.LocalDateTime(
-                    kotlinx.datetime.Clock.System.now().toString(),
-                    kotlinx.datetime.format.DateTimeFormat.ISO_LOCAL_DATE_TIME
-                )
+                updatedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             )
-            noteRepository.updateNote(updatedNote)
-            hideAddNoteDialog()
+            val result = noteRepository.updateNoteWithValidation(updatedNote)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            } else {
+                hideAddNoteDialog()
+            }
         }
     }
 
     fun deleteNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.deleteNote(note)
+            val result = noteRepository.deleteNoteWithValidation(note)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            }
         }
     }
 
     fun toggleFavorite(note: Note) {
         viewModelScope.launch {
-            noteRepository.toggleFavorite(note.id)
+            val result = noteRepository.toggleFavoriteWithValidation(note.id)
+            if (result is com.sleeplife.app.core.Result.Error) {
+                _uiState.update { it.copy(errorMessage = result.exception.message) }
+            }
         }
     }
 
@@ -133,5 +146,6 @@ data class NotesUiState(
     val showFavoritesOnly: Boolean = false,
     val searchQuery: String = "",
     val showAddDialog: Boolean = false,
-    val editingNote: com.sleeplife.app.data.entities.Note? = null
+    val editingNote: com.sleeplife.app.data.entities.Note? = null,
+    val errorMessage: String? = null
 )

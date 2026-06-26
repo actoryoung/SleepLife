@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Moon
+import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.TaskAlt
@@ -26,7 +26,7 @@ import com.sleeplife.app.ui.screens.pomodoro.PomodoroScreen
 import com.sleeplife.app.ui.screens.sleep.SleepScreen
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Sleep : Screen("sleep", "睡眠", Icons.Default.Moon)
+    object Sleep : Screen("sleep", "睡眠", Icons.Default.Brightness2)
     object Habits : Screen("habits", "习惯", Icons.Default.TaskAlt)
     object Pomodoro : Screen("pomodoro", "专注", Icons.Default.AccessTime)
     object Notes : Screen("notes", "笔记", Icons.Default.NoteAdd)

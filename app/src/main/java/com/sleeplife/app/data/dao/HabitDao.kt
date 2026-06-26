@@ -32,7 +32,7 @@ interface HabitDao {
     @Query("SELECT COUNT(*) FROM habit_checkins WHERE habitId = :habitId")
     suspend fun getCheckInCount(habitId: Long): Int
 
-    @Query("SELECT * FROM habit_checkins WHERE habitId = :habitId AND date(checkInDate/1000, 'unixepoch') = date('now') LIMIT 1")
+    @Query("SELECT * FROM habit_checkins WHERE habitId = :habitId AND checkInDate LIKE date('now') || '%' LIMIT 1")
     suspend fun getTodayCheckIn(habitId: Long): HabitCheckIn?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
