@@ -2,6 +2,10 @@
 
 > 个人生活管理 Android 应用
 
+![SleepLife](app_screenshot.png)
+
+**版本**: 1.0.0-alpha (versionCode 1) · **最低支持**: Android 8.0 (API 26)
+
 ## 简介
 
 SleepLife 是一个功能丰富的个人生活管理应用，帮助你追踪睡眠、培养习惯、记录笔记和提高专注力。
@@ -33,6 +37,13 @@ SleepLife 是一个功能丰富的个人生活管理应用，帮助你追踪睡�
   - 今日专注统计
   - 完成历史查看
 
+### 工程特性
+
+- MVVM 单向数据流，`StateFlow<UiState>` 驱动 UI
+- 统一的 `Result<T>` 错误处理体系 + 各模块输入校验器
+- 128+ 单元测试覆盖 ViewModel、Repository 与 Validator
+- Debug / Release 双构建通过，Release 已配置签名
+
 ### 即将推出
 
 - 睡眠统计和趋势分析
@@ -42,40 +53,52 @@ SleepLife 是一个功能丰富的个人生活管理应用，帮助你追踪睡�
 - 数据云端备份
 - 更多主题定制
 
+## 文档
+
+| 文档 | 说明 |
+|------|------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | 架构设计文档 |
+| [API_DOCS.md](API_DOCS.md) | 接口 / 模块使用说明 |
+| [PRODUCTION_READY_PLAN.md](PRODUCTION_READY_PLAN.md) | 生产就绪计划 |
+| [PROJECT_STATUS.md](PROJECT_STATUS.md) | 项目进度与修复记录 |
+
 ## 技术栈
 
 - **语言**: Kotlin
-- **UI框架**: Jetpack Compose
-- **架构**: MVVM + Clean Architecture
+- **UI框架**: Jetpack Compose + Material 3
+- **架构**: MVVM + Clean Architecture + Repository Pattern
 - **依赖注入**: Hilt
 - **数据库**: Room
 - **异步处理**: Kotlin Coroutines + Flow
 - **导航**: Navigation Compose
-- **最低支持**: Android 8.0 (API 26)
+- **日期**: kotlinx-datetime
+- **测试**: JUnit 4 + Robolectric + MockK
+- **最低支持**: Android 8.0 (API 26) / **Target SDK**: API 34
 
 ## 项目结构
 
 ```
 app/src/main/java/com/sleeplife/app/
-├── data/                      # 数据层
-│   ├── entities/             # 数据库实体
-│   ├── dao/                  # 数据访问对象
-│   ├── repository/           # 仓库层
-│   └── SleepLifeDatabase.kt  # 数据库配置
-├── di/                       # 依赖注入模块
-├── ui/                       # UI层
-│   ├── screens/              # 各功能屏幕
-│   │   ├── sleep/           # 睡眠模块
-│   │   ├── habits/          # 习惯模块
-│   │   ├── notes/           # 笔记模块
-│   │   ├── pomodoro/        # 专注模块
-│   │   └── more/            # 更多页面
-│   ├── viewmodels/          # ViewModel
-│   ├── navigation/          # 导航配置
-│   ├── theme/               # 主题配置
-│   └── components/          # 通用组件
-├── MainActivity.kt          # 主Activity
-└── SleepLifeApplication.kt  # Application类
+├── core/                       # 核心层
+│   ├── Result.kt               # Result<T> 密封类 + AppException 体系
+│   └── validators/             # 各模块输入校验器
+├── data/                       # 数据层
+│   ├── entities/               # 数据库实体
+│   ├── dao/                    # 数据访问对象
+│   ├── repository/             # 仓库层
+│   └── SleepLifeDatabase.kt    # 数据库配置
+├── di/                         # 依赖注入模块
+└── ui/                         # UI层
+    ├── screens/                # 各功能屏幕
+    │   ├── sleep/             # 睡眠模块
+    │   ├── habits/            # 习惯模块
+    │   ├── notes/             # 笔记模块
+    │   ├── pomodoro/          # 专注模块
+    │   └── more/              # 更多页面
+    ├── viewmodels/             # ViewModel
+    ├── navigation/             # 导航配置
+    ├── theme/                  # 主题配置
+    └── components/             # 通用组件
 ```
 
 ## 构建项目
@@ -108,6 +131,18 @@ gradlew.bat assembleDebug
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Release 构建已配置 `sleeplife.keystore` 签名（密钥位于项目根目录，已被 .gitignore 排除）。
+
+### 运行测试
+
+```bash
+# 运行所有单元测试 (需要 JDK 17)
+./gradlew test
+
+# 运行 lint 检查
+./gradlew lint
+```
+
 ## 数据库
 
 应用使用 Room 数据库存储所有数据：
@@ -137,6 +172,13 @@ MIT License
 Created with Claude Code
 
 ## 更新日志
+
+### v1.0.0-alpha (2026-06-26)
+- 修复编译错误与 SQL 日期查询问题
+- 接入校验层 + `Result<T>` 错误处理
+- 补充 128+ 单元测试
+- 配置 Release 签名
+- Debug / Release 双构建通过
 
 ### v1.0.0 (2024)
 - 初始版本发布
